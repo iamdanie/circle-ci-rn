@@ -4,8 +4,3 @@ it('does it properly', () => {
   const sum = 5 + 3;
   expect(sum).toBe(8);
 });
-
-it('does it properly', () => {
-  const sum = 5 + 3;
-  expect(sum).toBe(10);
-});
