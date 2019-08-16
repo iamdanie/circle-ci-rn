@@ -1,12 +1,64 @@
 version: 2
 jobs:
-  build:
+  node:
+    working_directory: ~/demoCiRn
     docker:
       - image: circleci/node:12.7.0
-
-    working_directory: ~/repo
-
     steps:
       - checkout
+
+      - restore_cache:
+          key: yarn-v1-{{ checksum "yarn.lock" }}-{{ arch }}
+
+      - restore_cache:
+          key: node-v1-{{ checksum "package.json" }}-{{ arch }}
+
       - run: yarn install
-      - run: yarn test
+
+      - save_cache:
+          key: yarn-v1-{{ checksum "yarn.lock" }}-{{ arch }}
+          paths:
+            - ~/.cache/yarn
+
+      - save_cache:
+          key: node-v1-{{ checksum "package.json" }}-{{ arch }}
+          paths:
+            - node_modules
+
+      - run:
+          name: jest tests
+          command: |
+            yarn test
+
+      - persist_to_workspace:
+          root: ~/demoCiRn
+          paths:
+            - node_modules
+
+  android:
+    working_directory: ~/demoCiRn/android
+    docker:
+      - image: circleci/android:api-28
+    steps:
+      - checkout:
+          path: ~/demoCiRn
+      - attach_workspace:
+          at: ~/demoCiRn
+      - restore_cache:
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+      - run:
+          name: Download Dependencies
+          command: ./gradlew androidDependencies
+      - save_cache:
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+          paths:
+            - ~/.gradle
+
+workflows:
+  version: 2
+  node-android-ios:
+    jobs:
+      - node
+      - android:
+          requires:
+            - node
