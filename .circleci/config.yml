@@ -4,6 +4,8 @@ jobs:
     docker:
       - image: circleci/node:12.7.0
 
+    working_directory: ~/demoCiRn
+
     steps:
       - checkout
       - run: yarn install
